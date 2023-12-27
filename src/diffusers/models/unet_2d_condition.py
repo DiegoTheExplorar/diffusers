@@ -2,6 +2,7 @@ from typing import Dict, Union
 
 import torch
 import torch.nn as nn
+from transformers import AutoTokenizer, AutoModel
 
 from ..configuration_utils import ConfigMixin, register_to_config
 from ..modeling_utils import ModelMixin
@@ -34,8 +35,13 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin):
         attention_head_dim=8,
         mid_block_type='UNetMidBlock2DCrossAttn',
         max_l=1025,
+        create_text_encoder=False,
     ):
         super().__init__()
+        if create_text_encoder:
+            model_type = "EleutherAI/gpt-neo-125M"
+            print (f'Creating text encoder of type {model_type}')
+            self.text_encoder = AutoModel.from_pretrained(model_type)
         self.mid_block_type = mid_block_type
         self.max_l = max_l
         self.gradient_checkpointing = gradient_checkpointing
@@ -141,6 +147,7 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin):
                 cross_attention_dim=cross_attention_dim,
                 attn_num_head_channels=attention_head_dim,
                 resnet_groups=norm_num_groups,
+                max_l=self.max_l,
             )
         else:
             assert False, self.mid_block_type

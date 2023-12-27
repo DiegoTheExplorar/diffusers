@@ -134,6 +134,7 @@ def get_down_block(
             downsample_padding=downsample_padding,
             cross_attention_dim=cross_attention_dim,
             attn_num_head_channels=attn_num_head_channels,
+            max_l=max_l,
         )
     elif down_block_type == "SkipDownBlock2D":
         return SkipDownBlock2D(
@@ -271,6 +272,7 @@ def get_up_block(
             resnet_act_fn=resnet_act_fn,
             cross_attention_dim=cross_attention_dim,
             attn_num_head_channels=attn_num_head_channels,
+            max_l=max_l,
         )
     elif up_block_type == "AttnUpBlock2D":
         return AttnUpBlock2D(
@@ -334,6 +336,7 @@ class UNetMidBlock2D(nn.Module):
         attn_num_head_channels=1,
         attention_type="default",
         output_scale_factor=1.0,
+        max_l=1025,
         **kwargs,
     ):
         super().__init__()
@@ -366,6 +369,7 @@ class UNetMidBlock2D(nn.Module):
                     rescale_output_factor=output_scale_factor,
                     eps=resnet_eps,
                     num_groups=resnet_groups,
+                    max_l=max_l,
                 )
             )
             resnets.append(
@@ -737,6 +741,7 @@ class UNetMidBlock2DCrossAttnEncoderPosition(nn.Module):
         attention_type="default",
         output_scale_factor=1.0,
         cross_attention_dim=1280,
+        max_l=1025,
         **kwargs,
     ):
         super().__init__()
@@ -769,6 +774,7 @@ class UNetMidBlock2DCrossAttnEncoderPosition(nn.Module):
                     in_channels // attn_num_head_channels,
                     depth=1,
                     context_dim=cross_attention_dim,
+                    max_l=max_l,
                 )
             )
             resnets.append(
@@ -1251,6 +1257,7 @@ class CrossAttnEncoderPositionDownBlock2D(nn.Module):
         output_scale_factor=1.0,
         downsample_padding=1,
         add_downsample=True,
+        max_l=1025,
     ):
         super().__init__()
         resnets = []
@@ -1281,6 +1288,7 @@ class CrossAttnEncoderPositionDownBlock2D(nn.Module):
                     out_channels // attn_num_head_channels,
                     depth=1,
                     context_dim=cross_attention_dim,
+                    max_l=max_l,
                 )
             )
         self.attentions = nn.ModuleList(attentions)
@@ -2128,6 +2136,7 @@ class CrossAttnEncoderPositionUpBlock2D(nn.Module):
         output_scale_factor=1.0,
         downsample_padding=1,
         add_upsample=True,
+        max_l=1025,
     ):
         super().__init__()
         resnets = []
@@ -2160,6 +2169,7 @@ class CrossAttnEncoderPositionUpBlock2D(nn.Module):
                     out_channels // attn_num_head_channels,
                     depth=1,
                     context_dim=cross_attention_dim,
+                    max_l=max_l,
                 )
             )
         self.attentions = nn.ModuleList(attentions)
