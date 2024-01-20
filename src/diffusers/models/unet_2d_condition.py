@@ -216,7 +216,8 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin):
         down_block_res_samples = (sample,)
         for downsample_block in self.down_blocks:
 
-            if hasattr(downsample_block, "attentions") and downsample_block.attentions is not None and (isinstance(downsample_block, CrossAttnDownBlock2D) or isinstance(downsample_block, CrossAttnDecoderPositionDownBlock2D) or isinstance(downsample_block, CrossAttnDecoderPositionEncoderPositionDownBlock2D) or isinstance(downsample_block, CrossAttnEncoderPositionDownBlock2D) or isinstance(downsample_block, CrossAttnLSTMDownBlock2D)):
+            #if hasattr(downsample_block, "attentions") and downsample_block.attentions is not None and (isinstance(downsample_block, CrossAttnDownBlock2D) or isinstance(downsample_block, CrossAttnDecoderPositionDownBlock2D) or isinstance(downsample_block, CrossAttnDecoderPositionEncoderPositionDownBlock2D) or isinstance(downsample_block, CrossAttnEncoderPositionDownBlock2D) or isinstance(downsample_block, CrossAttnLSTMDownBlock2D)):
+            if hasattr(downsample_block, "attentions") and downsample_block.attentions is not None:
                 #import pdb; pdb.set_trace()
                 if not self.gradient_checkpointing:
                     sample, res_samples = downsample_block(
@@ -243,7 +244,8 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin):
             res_samples = down_block_res_samples[-len(upsample_block.resnets) :]
             down_block_res_samples = down_block_res_samples[: -len(upsample_block.resnets)]
 
-            if hasattr(upsample_block, "attentions") and upsample_block.attentions is not None and (isinstance(upsample_block, CrossAttnUpBlock2D) or isinstance(upsample_block, CrossAttnDecoderPositionUpBlock2D) or isinstance(upsample_block, CrossAttnDecoderPositionEncoderPositionUpBlock2D) or isinstance(upsample_block, CrossAttnEncoderPositionUpBlock2D) or isinstance(upsample_block, CrossAttnLSTMUpBlock2D)):
+            #if hasattr(upsample_block, "attentions") and upsample_block.attentions is not None and (isinstance(upsample_block, CrossAttnUpBlock2D) or isinstance(upsample_block, CrossAttnDecoderPositionUpBlock2D) or isinstance(upsample_block, CrossAttnDecoderPositionEncoderPositionUpBlock2D) or isinstance(upsample_block, CrossAttnEncoderPositionUpBlock2D) or isinstance(upsample_block, CrossAttnLSTMUpBlock2D)):
+            if hasattr(upsample_block, "attentions") and upsample_block.attentions is not None:
                 if not self.gradient_checkpointing:
                     sample = upsample_block(
                         hidden_states=sample,
