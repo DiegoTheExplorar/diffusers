@@ -217,8 +217,9 @@ class DDPMPipeline(DiffusionPipeline):
             )
             image = image.to(self.device)
         else:
+            timesteps = torch.tensor([total_timesteps-1 for i in range(batch_size)])
             self.scheduler.set_timesteps(total_timesteps)
-            image = self.scheduler.add_noise(ground_truth_images, torch.randn(ground_truth_images.shape).to(self.device), total_timesteps)
+            image = self.scheduler.add_noise(ground_truth_images, torch.randn(ground_truth_images.shape).to(self.device), timesteps)
         
         for t in self.progress_bar(self.scheduler.timesteps):
             # 1. predict noise model_output
