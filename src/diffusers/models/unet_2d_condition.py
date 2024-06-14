@@ -273,3 +273,54 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin):
         output = {"sample": sample}
 
         return output
+    
+    #goal is to get latent representation ("simplified model of the code that we have")
+    #idea: use the output from unet stage 1 - 4
+
+    def encode(
+        self,
+        sample,#: torch.FloatTensor,
+        encoder_hidden_states,#: torch.Tensor,
+        attention_mask=None, 
+        ): #-> Dict[str, torch.FloatTensor]:
+
+        # 0. center input if necessary
+        if self.config.center_input_sample:
+            sample = 2 * sample - 1.0
+
+        # 1. time
+        timesteps = torch.tensor([0], dtype=torch.long, device=sample.device).broadcast_to(sample.shape[0])
+        # broadcast to batch dimension
+
+        t_emb = self.time_proj(timesteps)
+        emb = self.time_embedding(t_emb)
+
+        # 2. pre-process
+        sample = self.conv_in(sample)
+
+        # 3. down
+        down_block_res_samples = (sample,)
+        for downsample_block in self.down_blocks:
+
+            #if hasattr(downsample_block, "attentions") and downsample_block.attentions is not None and (isinstance(downsample_block, CrossAttnDownBlock2D) or isinstance(downsample_block, CrossAttnDecoderPositionDownBlock2D) or isinstance(downsample_block, CrossAttnDecoderPositionEncoderPositionDownBlock2D) or isinstance(downsample_block, CrossAttnEncoderPositionDownBlock2D) or isinstance(downsample_block, CrossAttnLSTMDownBlock2D)):
+            if hasattr(downsample_block, "attentions") and downsample_block.attentions is not None:
+                #import pdb; pdb.set_trace()
+                if not self.gradient_checkpointing:
+                    sample, res_samples = downsample_block(
+                        hidden_states=sample, temb=emb, encoder_hidden_states=encoder_hidden_states, attention_mask=attention_mask
+                    )
+                else:
+                    #X = torch.utils.checkpoint.checkpoint(self.cnn_block_2, X)
+                    sample, res_samples = torch.utils.checkpoint.checkpoint(downsample_block, 
+                        (sample, emb, encoder_hidden_states, attention_mask))
+            else:
+                sample, res_samples = downsample_block(hidden_states=sample, temb=emb)
+
+            down_block_res_samples += res_samples
+
+        # 4. mid
+        if not self.gradient_checkpointing:
+            sample = self.mid_block(sample, emb, encoder_hidden_states=encoder_hidden_states, attention_mask=attention_mask)
+        else:
+            sample = torch.utils.checkpoint.checkpoint(self.mid_block, (sample, emb, encoder_hidden_states, attention_mask))
+        return sample
